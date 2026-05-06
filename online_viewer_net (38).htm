@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogZ 2026 | Nền Tảng Luyện Thi TSA Toàn Diện</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --brand: #be1e2d;
+            --brand-light: #ffebed;
+            --brand-dark: #8c141e;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        }
+
+        * { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            background-color: var(--bg-body); 
+            color: #0f172a; 
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.5s ease forwards; }
+
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .loading-pulse { animation: pulse-soft 2s infinite ease-in-out; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+        /* Component Styles */
+        .glass-nav { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(16px); 
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .logz-card {
+            background: white;
+            border-radius: 2rem;
+            border: 1px solid rgba(226, 232, 240, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--brand-light);
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px rgba(190, 30, 45, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-dark);
+            transform: scale(1.02);
+            box-shadow: 0 15px 25px -5px rgba(190, 30, 45, 0.4);
+        }
+
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover { color: var(--brand); }
+        .nav-link.active { color: var(--brand); background: var(--brand-light); border-radius: 1rem; }
+
+        .search-box {
+            background: white;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(190, 30, 45, 0.1);
+        }
+
+        .category-chip {
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Responsive Grids */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .course-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         NAVIGATION
+         ========================================== -->
+    <nav class="glass-nav fixed top-0 w-full z-[100]">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="switchSection('home')">
+                <div class="w-11 h-11 bg-brand text-white flex items-center justify-center rounded-xl shadow-lg group-hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-bolt-lightning italic text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tighter leading-none">LogZ <span class="text-brand">PRO</span></h1>
+                    <p class="text-[8px] uppercase tracking-[0.2em] font-bold text-slate-400">Mastering TSA HUST</p>
+                </div>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-4">
+                <button onclick="switchSection('home')" id="btn-home" class="nav-link active">Home</button>
+                <button onclick="switchSection('courses')" id="btn-courses" class="nav-link">Khóa học</button>
+                <button onclick="switchSection('notebook')" id="btn-notebook" class="nav-link">Ghi chú</button>
+                <button onclick="openModal('freeModal')" class="nav-link">Tài liệu</button>
+                <div class="h-6 w-[1px] bg-slate-200 mx-2"></div>
+                <button id="adminLoginBtn" onclick="openModal('loginModal')" class="bg-slate-100 text-slate-600 px-5 py-2 rounded-xl text-xs font-bold hover:bg-brand hover:text-white transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> <span>ADMIN</span>
+                </button>
+            </div>
+
+            <button class="md:hidden text-2xl" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars-staggered"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[150] translate-x-full transition-transform duration-500 flex flex-col p-8">
+        <div class="flex justify-between items-center mb-12">
+            <span class="text-2xl font-black italic text-brand">Menu</span>
+            <button onclick="toggleMobileMenu()" class="text-3xl text-slate-300">&times;</button>
+        </div>
+        <div class="flex flex-col gap-6">
+            <button onclick="switchSection('home'); toggleMobileMenu()" class="text-4xl font-extrabold text-left">HOME</button>
+            <button onclick="switchSection('courses'); toggleMobileMenu()" class="text-4xl font-extrabold text-left text-brand">COURSES</button>
+            <button onclick="switchSection('notebook'); toggleMobileMenu()" class="text-4xl font-extrabold text-left">NOTES</button>
+            <button onclick="openModal('freeModal'); toggleMobileMenu()" class="text-4xl font-extrabold text-left">FREE STUFF</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MAIN CONTENT
+         ========================================== -->
+    <main class="pt-28 pb-20 px-6 max-w-7xl mx-auto">
+
+        <!-- SECTION: HOME -->
+        <section id="section-home" class="page-section space-y-24">
+            <div class="flex flex-col lg:flex-row items-center gap-16 py-12">
+                <div class="flex-1 space-y-8 animate-fade">
+                    <div class="inline-flex items-center gap-2 bg-red-50 text-brand px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100">
+                        <span class="w-2 h-2 bg-brand rounded-full animate-ping"></span> Live Update 2026
+                    </div>
+                    <h2 class="text-6xl md:text-8xl font-black text-slate-900 leading-[0.9] tracking-tight">
+                        Chinh phục <br> <span class="text-brand">TSA Bách Khoa</span> 
+                    </h2>
+                    <p class="text-slate-500 text-lg md:text-xl font-medium max-w-xl">
+                        Nền tảng quản lý bài giảng chuyên sâu dành cho học sinh LogZ. Toàn bộ dữ liệu được đồng bộ Real-time từ Google Sheet.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="switchSection('courses')" class="btn-primary px-8 py-4 rounded-2xl font-bold text-lg">Bắt đầu học ngay</button>
+                        <button onclick="openModal('freeModal')" class="bg-white border border-slate-200 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all">Kho tài liệu</button>
+                    </div>
+                </div>
+                <div class="flex-1 w-full relative group">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-brand to-orange-500 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                    <div class="relative w-full aspect-video bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden flex items-center justify-center">
+                        <i class="fa-solid fa-play text-7xl text-white/20 group-hover:scale-125 transition-transform duration-700"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="logz-card p-8 text-center">
+                    <h3 class="text-4xl font-black text-brand mb-1">500+</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Bài giảng</p>
+                </div>
+                <div class="logz-card p-8 text-center">
+                    <h3 class="text-4xl font-black text-brand mb-1">2k+</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Học viên</p>
+                </div>
+                <div class="logz-card p-8 text-center">
+                    <h3 class="text-4xl font-black text-brand mb-1">100+</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Đề thi thử</p>
+                </div>
+                <div class="logz-card p-8 text-center">
+                    <h3 class="text-4xl font-black text-brand mb-1">9.5</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Điểm trung bình</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: COURSES -->
+        <section id="section-courses" class="page-section hidden space-y-10">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h2 class="text-4xl font-black tracking-tight">Khoá học của tôi</h2>
+                    <p class="text-slate-400 font-medium italic">Tự động đồng bộ từ Google Drive</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div class="search-box flex items-center px-4 py-3 rounded-2xl w-full sm:w-80 shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 mr-3"></i>
+                        <input type="text" id="courseSearch" placeholder="Tìm tên bài giảng..." class="bg-transparent outline-none w-full font-bold text-sm" onkeyup="filterCourses()">
+                    </div>
+                    <select id="filterCat" onchange="filterCourses()" class="bg-white px-4 py-3 rounded-2xl font-bold text-sm shadow-sm outline-none border-none">
+                        <option value="all">Tất cả môn</option>
+                        <option value="Toán học">Toán học</option>
+                        <option value="Đọc hiểu">Đọc hiểu</option>
+                        <option value="Khoa học">Khoa học</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Admin Quick Add -->
+            <div id="adminPanel" class="hidden animate-fade bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 bg-brand rounded-xl flex items-center justify-center"><i class="fa-solid fa-plus"></i></div>
+                    <h3 class="text-xl font-bold">Thêm bài giảng nhanh (Local)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <input type="text" id="inTitle" placeholder="Tiêu đề bài học" class="bg-white/10 border border-white/10 p-4 rounded-xl outline-none focus:border-brand transition-all">
+                    <input type="text" id="inVideo" placeholder="Link Drive Video" class="bg-white/10 border border-white/10 p-4 rounded-xl outline-none focus:border-brand transition-all">
+                    <input type="text" id="inDoc" placeholder="Link Drive Tài liệu" class="bg-white/10 border border-white/10 p-4 rounded-xl outline-none focus:border-brand transition-all">
+                    <input type="text" id="inHand" placeholder="Link Drive Chép tay" class="bg-white/10 border border-white/10 p-4 rounded-xl outline-none focus:border-brand transition-all">
+                    <select id="inCat" class="bg-white/10 border border-white/10 p-4 rounded-xl outline-none focus:border-brand transition-all">
+                        <option class="text-slate-800">Toán học</option>
+                        <option class="text-slate-800">Đọc hiểu</option>
+                        <option class="text-slate-800">Khoa học</option>
+                    </select>
+                    <button onclick="addNewCourse()" class="btn-primary p-4 rounded-xl font-bold">LƯU BÀI GIẢNG</button>
+                </div>
+            </div>
+
+            <!-- List Container -->
+            <div id="courseList" class="course-grid">
+                <!-- Data injected here -->
+            </div>
+        </section>
+
+        <!-- SECTION: NOTEBOOK -->
+        <section id="section-notebook" class="page-section hidden">
+            <div class="max-w-4xl mx-auto space-y-8">
+                <div class="text-center">
+                    <h2 class="text-4xl font-black">Sổ tay TSA</h2>
+                    <p class="text-slate-400">Lưu lại những lưu ý quan trọng trong quá trình học tập</p>
+                </div>
+                
+                <div class="logz-card p-8 space-y-6">
+                    <textarea id="noteInput" rows="10" class="w-full bg-slate-50 p-6 rounded-2xl outline-none focus:ring-2 ring-brand/10 font-medium" placeholder="Nhập ghi chú của bạn tại đây..."></textarea>
+                    <button onclick="saveNote()" class="btn-primary w-full py-4 rounded-xl font-bold text-lg">LƯU GHI CHÚ VÀO TRÌNH DUYỆT</button>
+                </div>
+                
+                <div id="noteStatus" class="text-center text-emerald-500 font-bold hidden">Ghi chú đã được lưu thành công!</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================
+         MODALS
+         ========================================== -->
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-[500] hidden items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-fade">
+            <div class="bg-brand p-10 text-white text-center">
+                <i class="fa-solid fa-user-shield text-5xl mb-4"></i>
+                <h3 class="text-2xl font-black">QUẢN TRỊ VIÊN</h3>
+            </div>
+            <div class="p-10 space-y-4">
+                <input type="email" id="adminEmail" placeholder="Admin Email" class="w-full bg-slate-100 p-4 rounded-xl outline-none focus:ring-2 ring-brand/20 font-bold">
+                <input type="password" id="adminPass" placeholder="Mật khẩu" class="w-full bg-slate-100 p-4 rounded-xl outline-none focus:ring-2 ring-brand/20 font-bold">
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeModal('loginModal')" class="flex-1 py-4 font-bold text-slate-400">HỦY</button>
+                    <button onclick="verifyAdmin()" class="flex-[2] btn-primary py-4 rounded-xl font-bold">ĐĂNG NHẬP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Free Document Modal -->
+    <div id="freeModal" class="fixed inset-0 z-[500] hidden items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-fade max-h-[90vh] flex flex-col">
+            <div class="p-8 border-b flex justify-between items-center">
+                <h3 class="text-2xl font-black italic">Tài liệu Free <span class="text-brand">LogZ</span></h3>
+                <button onclick="closeModal('freeModal')" class="text-3xl">&times;</button>
+            </div>
+            <div class="p-8 overflow-y-auto flex-1 space-y-4">
+                <div id="adminFreeAdd" class="hidden p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mb-6">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="freeT" placeholder="Tiêu đề" class="p-3 rounded-lg text-sm bg-white border outline-none">
+                        <input type="text" id="freeL" placeholder="Link Drive" class="p-3 rounded-lg text-sm bg-white border outline-none">
+                        <button onclick="addFreeDoc()" class="col-span-2 bg-slate-800 text-white font-bold py-3 rounded-lg">ĐĂNG TÀI LIỆU</button>
+                    </div>
+                </div>
+                <div id="freeDocList" class="space-y-3">
+                    <!-- List data -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-full text-sm font-bold shadow-2xl z-[600] translate-y-32 transition-all duration-500 opacity-0 italic">
+        Thông báo từ hệ thống...
+    </div>
+
+    <!-- ==========================================
+         CORE SCRIPT (OVER 400 LINES OF LOGIC)
+         ========================================== -->
+    <script>
+        // --- 1. CONFIGURATION ---
+        const CONFIG = {
+            SHEET_ID: '1eeubTb9DlwtTA6W9Tr9cZ32u7Rwx5Z1BrkhUIXDwY-o',
+            REFRESH_INTERVAL: 300000, // 5 phút tự động sync lại
+            ADMIN: {
+                user: "toanlogz123.edu@gmail.com",
+                pass: "Logz2027A@"
+            },
+            STORAGE_KEYS: {
+                COURSES: 'lz_courses_v2',
+                FREE: 'lz_free_v2',
+                NOTES: 'lz_student_notes'
+            }
+        };
+
+        const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+        // --- 2. APPLICATION STATE ---
+        let state = {
+            courses: [],
+            filtered: [],
+            freeDocs: JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.FREE)) || [],
+            isAdmin: false,
+            currentSection: 'home'
+        };
+
+        // --- 3. UTILITIES ---
+        function fixDriveLink(url) {
+            if(!url || url.trim() === "" || url === '""') return "";
+            let link = url.replace(/"/g, '').trim();
+            // Đảm bảo link luôn ở dạng preview/view để mở tab mới ổn định nhất
+            if (link.includes('drive.google.com')) {
+                return link.replace('/view?usp=sharing', '/view').replace('/preview', '/view');
+            }
+            return link;
+        }
+
+        function showToast(msg, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.replace('translate-y-32', 'translate-y-0');
+            toast.classList.replace('opacity-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.replace('translate-y-0', 'translate-y-32');
+                toast.classList.replace('opacity-100', 'opacity-0');
+            }, duration);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('translate-x-full');
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.replace('hidden', 'flex');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.replace('flex', 'hidden');
+        }
+
+        // --- 4. CORE ENGINE: SYNC FROM GOOGLE SHEET ---
+        async function syncData() {
+            console.log("Initiating sync with Google Sheet...");
+            try {
+                const response = await fetch(SHEET_CSV_URL);
+                const csvData = await response.text();
+                
+                // Parser CSV thủ công để xử lý các ô có dấu phẩy bên trong dấu ngoặc kép
+                const rows = csvData.split(/\r?\n/).slice(1);
+                const parsedCourses = rows.map((row, idx) => {
+                    const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (!matches || matches.length < 2) return null;
+
+                    const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : "";
+
+                    return {
+                        id: `sheet-${idx}`,
+                        title: clean(matches[0]),
+                        vid: fixDriveLink(matches[1]),
+                        doc: fixDriveLink(matches[2]),
+                        hand: fixDriveLink(matches[3]),
+                        cat: matches[4] ? clean(matches[4]) : "Toán học"
+                    };
+                }).filter(c => c && c.title);
+
+                // Gộp với dữ liệu Local
+                const localCourses = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.COURSES)) || [];
+                state.courses = [...parsedCourses, ...localCourses];
+                state.filtered = [...state.courses];
+                
+                renderCourses();
+                console.log("Sync complete. Total items:", state.courses.length);
+            } catch (error) {
+                console.error("Sync failed:", error);
+                showToast("Lỗi đồng bộ dữ liệu Sheet!");
+            }
+        }
+
+        // --- 5. RENDER ENGINE ---
+        function renderCourses() {
+            const list = document.getElementById('courseList');
+            if (!list) return;
+
+            if (state.filtered.length === 0) {
+                list.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 italic bg-white rounded-3xl">Không tìm thấy bài giảng phù hợp...</div>`;
+                return;
+            }
+
+            list.innerHTML = state.filtered.map(c => {
+                const isSheetData = c.id.toString().includes('sheet');
+                
+                // Color mapping for categories
+                const catColors = {
+                    "Toán học": "bg-blue-50 text-blue-600 border-blue-100",
+                    "Đọc hiểu": "bg-emerald-50 text-emerald-600 border-emerald-100",
+                    "Khoa học": "bg-purple-50 text-purple-600 border-purple-100"
+                };
+                const colorClass = catColors[c.cat] || "bg-slate-50 text-slate-600 border-slate-100";
+
+                return `
+                <div class="logz-card p-8 flex flex-col justify-between group animate-fade">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="category-chip border ${colorClass}">${c.cat}</span>
+                            ${state.isAdmin && !isSheetData ? 
+                                `<button onclick="deleteCourse('${c.id}')" class="text-slate-300 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                        </div>
+                        <h4 class="text-xl font-extrabold text-slate-800 leading-tight mb-6 group-hover:text-brand transition-colors">${c.title}</h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2 mt-auto">
+                        ${c.vid ? `
+                            <a href="${c.vid}" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-red-50 text-brand font-bold text-[11px] hover:bg-brand hover:text-white transition-all uppercase tracking-wider">
+                                <span><i class="fa-solid fa-circle-play mr-2"></i> Xem Video bài giảng</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>` : ''}
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            ${c.doc ? `
+                                <a href="${c.doc}" target="_blank" class="flex items-center justify-center p-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-[10px] hover:bg-slate-800 hover:text-white transition-all uppercase">
+                                    <i class="fa-solid fa-file-pdf mr-2"></i> Tài liệu
+                                </a>` : ''}
+                            ${c.hand ? `
+                                <a href="${c.hand}" target="_blank" class="flex items-center justify-center p-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-[10px] hover:bg-slate-800 hover:text-white transition-all uppercase">
+                                    <i class="fa-solid fa-pen-nib mr-2"></i> Chép tay
+                                </a>` : ''}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderFreeDocs() {
+            const container = document.getElementById('freeDocList');
+            if (state.freeDocs.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-10 italic">Đang cập nhật tài liệu...</p>`;
+                return;
+            }
+            container.innerHTML = state.freeDocs.map((d, i) => `
+                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl hover:bg-red-50 transition-colors border border-transparent hover:border-brand/10 group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand shadow-sm"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                        <span class="font-bold text-slate-700">${d.title}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="${d.link}" target="_blank" class="bg-white px-4 py-2 rounded-lg text-[10px] font-black text-brand shadow-sm hover:bg-brand hover:text-white transition-all">TẢI XUỐNG</a>
+                        ${state.isAdmin ? `<button onclick="deleteFreeDoc(${i})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- 6. LOGIC & FILTERS ---
+        function filterCourses() {
+            const query = document.getElementById('courseSearch').value.toLowerCase();
+            const cat = document.getElementById('filterCat').value;
+
+            state.filtered = state.courses.filter(c => {
+                const matchQuery = c.title.toLowerCase().includes(query);
+                const matchCat = cat === 'all' || c.cat === cat;
+                return matchQuery && matchCat;
+            });
+            renderCourses();
+        }
+
+        function switchSection(id) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('section-' + id).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            
+            state.currentSection = id;
+            if(id === 'courses') renderCourses();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function saveNote() {
+            const content = document.getElementById('noteInput').value;
+            localStorage.setItem(CONFIG.STORAGE_KEYS.NOTES, content);
+            const status = document.getElementById('noteStatus');
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 3000);
+            showToast("Đã lưu ghi chú!");
+        }
+
+        function loadNote() {
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEYS.NOTES);
+            if(saved) document.getElementById('noteInput').value = saved;
+        }
+
+        // --- 7. ADMIN FUNCTIONS ---
+        function verifyAdmin() {
+            const email = document.getElementById('adminEmail').value;
+            const pass = document.getElementById('adminPass').value;
+
+            if (email === CONFIG.ADMIN.user && pass === CONFIG.ADMIN.pass) {
+                state.isAdmin = true;
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('adminFreeAdd').classList.remove('hidden');
+                document.getElementById('adminLoginBtn').innerHTML = '<i class="fa-solid fa-user-check"></i> <span>ADMIN ON</span>';
+                document.getElementById('adminLoginBtn').classList.replace('bg-slate-100', 'bg-emerald-500');
+                document.getElementById('adminLoginBtn').classList.replace('text-slate-600', 'text-white');
+                closeModal('loginModal');
+                showToast("CHẾ ĐỘ QUẢN TRỊ ĐÃ KÍCH HOẠT!");
+                renderAll();
+            } else {
+                alert("Thông tin đăng nhập không chính xác!");
+            }
+        }
+
+        function addNewCourse() {
+            const newC = {
+                id: 'local-' + Date.now(),
+                title: document.getElementById('inTitle').value,
+                vid: fixDriveLink(document.getElementById('inVideo').value),
+                doc: fixDriveLink(document.getElementById('inDoc').value),
+                hand: fixDriveLink(document.getElementById('inHand').value),
+                cat: document.getElementById('inCat').value
+            };
+
+            if(!newC.title) return alert("Vui lòng nhập tiêu đề!");
+            
+            const local = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.COURSES)) || [];
+            local.unshift(newC);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(local));
+            
+            // Clear inputs
+            ['inTitle', 'inVideo', 'inDoc', 'inHand'].forEach(id => document.getElementById(id).value = '');
+            
+            syncData();
+            showToast("Đã thêm bài giảng thành công!");
+        }
+
+        function deleteCourse(id) {
+            if(!confirm("Xác nhận xóa bài giảng này khỏi bộ nhớ máy?")) return;
+            let local = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.COURSES)) || [];
+            local = local.filter(c => c.id !== id);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(local));
+            syncData();
+        }
+
+        function addFreeDoc() {
+            const t = document.getElementById('freeT').value;
+            const l = document.getElementById('freeL').value;
+            if(!t || !l) return;
+            
+            state.freeDocs.unshift({ title: t, link: fixDriveLink(l) });
+            localStorage.setItem(CONFIG.STORAGE_KEYS.FREE, JSON.stringify(state.freeDocs));
+            renderFreeDocs();
+            document.getElementById('freeT').value = '';
+            document.getElementById('freeL').value = '';
+        }
+
+        function deleteFreeDoc(index) {
+            state.freeDocs.splice(index, 1);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.FREE, JSON.stringify(state.freeDocs));
+            renderFreeDocs();
+        }
+
+        function renderAll() {
+            renderCourses();
+            renderFreeDocs();
+            loadNote();
+        }
+
+        // --- 8. INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            syncData();
+            renderFreeDocs();
+            loadNote();
+            
+            // Auto sync
+            setInterval(syncData, CONFIG.REFRESH_INTERVAL);
+            
+            console.log("LogZ Pro System Initialized...");
+        });
+
+    </script>
+</body>
+</html>
